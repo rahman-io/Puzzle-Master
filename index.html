@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Puzzle Master — Build Your Code, Learn Python OOP By Playing</title>
+<style>
+  :root{
+    --bg:#f4f6fb;
+    --bg-2:#eaeef6;
+    --panel:#ffffff;
+    --panel-2:#f7f9fc;
+    --line:#dfe5ef;
+    --line-soft:#eaeef5;
+    --ink:#1f2733;
+    --muted:#697384;
+    --faint:#9aa4b4;
+    --green:#1a9e54;
+    --green-bg:#e6f6ec;
+    --yellow:#c98a06;
+    --yellow-bg:#fdf3dc;
+    --red:#d63d3d;
+    --red-bg:#fdecec;
+    --blue:#2563c9;
+    --purple:#7c3aed;
+    --term-bg:#0d1320;
+    --radius:16px;
+    --font-code:"SFMono-Regular",ui-monospace,"JetBrains Mono","Consolas",monospace;
+    --font-ui:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  /* ---- Proteksi: cegah seleksi & highlight teks ---- */
+  body{
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none;
+    -webkit-touch-callout:none;
+  }
+  /* tetap izinkan ketik di input jawaban */
+  #termInput{-webkit-user-select:text;user-select:text;}
+
+  body{
+    font-family:var(--font-ui);
+    background:
+      radial-gradient(800px 420px at 90% -10%, #e4ecfb 0%, transparent 60%),
+      radial-gradient(700px 460px at 0% 105%, #e9f5ee 0%, transparent 55%),
+      var(--bg);
+    color:var(--ink);
+    min-height:100vh;line-height:1.55;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:26px 20px 70px}
+
+  /* ---------- GAME BANNER (seperti Cat Factory) ---------- */
+  .banner{
+    background:linear-gradient(135deg,#fff7e8 0%,#ffeede 50%,#fde9ef 100%);
+    border:1px solid #f1d9bf;border-radius:20px;
+    padding:30px 26px 26px;text-align:center;position:relative;overflow:hidden;
+    box-shadow:0 10px 30px -18px rgba(180,120,40,.35);
+  }
+  .banner::before{
+    content:"";position:absolute;inset:0;
+    background:radial-gradient(420px 200px at 50% -40%, rgba(255,255,255,.7), transparent 70%);
+    pointer-events:none;
+  }
+  .banner .eyebrow{
+    font-family:var(--font-code);font-size:12px;letter-spacing:.32em;
+    text-transform:uppercase;color:#c2820f;margin-bottom:12px;position:relative;
+  }
+  .banner h1{
+    font-size:clamp(34px,6vw,60px);line-height:.98;font-weight:800;
+    letter-spacing:-.025em;position:relative;color:#2a2017;
+  }
+  .banner h1 .flame{
+    background:linear-gradient(120deg,#e8851b,#d6453c);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .banner .tagline{
+    margin-top:14px;color:#7a6249;font-size:16px;max-width:560px;
+    margin-left:auto;margin-right:auto;position:relative;
+  }
+  .banner .tagline b{color:#5a4631}
+  .banner .chips{
+    display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+    margin-top:20px;position:relative;
+  }
+  .chip{
+    font-family:var(--font-code);font-size:13px;color:#9a5a12;
+    background:rgba(255,255,255,.7);border:1px solid #ecc99e;
+    border-radius:99px;padding:7px 15px;
+  }
+  .chip b{color:#c2691a}
+
+  /* ---------- INTRO ---------- */
+  .intro{margin:26px 2px 6px;color:var(--muted);font-size:15.5px;max-width:680px}
+  .intro b{color:var(--ink);font-weight:600}
+
+  /* ---------- PROGRESS ---------- */
+  .progress{display:flex;gap:6px;margin:18px 0 4px;flex-wrap:wrap}
+  .pstep{flex:1 1 0;min-width:50px;height:7px;border-radius:99px;background:var(--bg-2);
+    border:1px solid var(--line-soft)}
+  .pstep.done{background:var(--green);border-color:var(--green)}
+  .pstep.active{background:var(--yellow);border-color:var(--yellow)}
+  .plabel{font-family:var(--font-code);font-size:12px;color:var(--muted);
+    margin-top:8px;letter-spacing:.03em}
+
+  /* ---------- LAYOUT ---------- */
+  .stage{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;margin-top:22px;align-items:start}
+  @media(max-width:880px){.stage{grid-template-columns:1fr}}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+    overflow:hidden;box-shadow:0 6px 22px -16px rgba(40,60,100,.25)}
+  .card-head{padding:13px 16px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:10px;background:var(--panel-2)}
+  .card-head .dots{display:flex;gap:6px}
+  .card-head .dots i{width:11px;height:11px;border-radius:50%;display:block}
+  .dots i:nth-child(1){background:#ff5f56}
+  .dots i:nth-child(2){background:#ffbd2e}
+  .dots i:nth-child(3){background:#27c93f}
+  .card-title{font-family:var(--font-code);font-size:13px;color:var(--muted)}
+  .card-body{padding:16px}
+
+  /* ---------- MISSION ---------- */
+  .mission{background:linear-gradient(180deg,#fffdf7,#fff);
+    border:1px solid var(--line);border-left:3px solid var(--yellow);
+    border-radius:10px;padding:14px 16px;margin-bottom:16px}
+  .mission .tag{font-family:var(--font-code);font-size:11px;color:var(--yellow);
+    letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px;font-weight:600}
+  .mission h3{font-size:16px;margin-bottom:6px;font-weight:700}
+  .mission p{color:var(--muted);font-size:14px}
+  .mission code{font-family:var(--font-code);background:var(--green-bg);color:var(--green);
+    padding:1px 6px;border-radius:5px;font-size:13px;font-weight:600}
+
+  /* ---------- SLOTS ---------- */
+  .slots{display:flex;flex-direction:column;gap:9px;min-height:60px}
+  .slot{border:2px dashed var(--line);border-radius:10px;min-height:46px;
+    background:var(--panel-2);transition:.18s;display:flex;align-items:center;
+    padding:4px;position:relative}
+  .slot.over{border-color:var(--yellow);background:var(--yellow-bg)}
+  .slot.filled{border-style:solid;border-color:transparent;background:transparent;padding:0}
+  .slot-num{position:absolute;left:-24px;top:50%;transform:translateY(-50%);
+    font-family:var(--font-code);font-size:12px;color:var(--faint);width:16px;text-align:right}
+  @media(max-width:880px){.slot-num{display:none}}
+
+  /* ---------- BLOCKS ---------- */
+  .block{font-family:var(--font-code);font-size:13.5px;line-height:1.5;
+    background:#f3f6fb;border:1px solid #d9e1ee;border-radius:9px;
+    padding:10px 12px;cursor:grab;width:100%;white-space:pre;overflow-x:auto;
+    transition:transform .12s,box-shadow .12s,border-color .12s;
+    user-select:none;position:relative;color:#283143}
+  .block:hover{border-color:var(--blue);transform:translateY(-1px);
+    box-shadow:0 4px 12px -6px rgba(40,90,200,.3)}
+  .block:active{cursor:grabbing}
+  .block.dragging{opacity:.4}
+  .block.locked{cursor:default;opacity:.85}
+  .block.locked:hover{transform:none;box-shadow:none;border-color:#d9e1ee}
+  .block .grip{color:#b6c0d0;margin-right:8px;letter-spacing:-2px}
+  .block.correct{border-color:var(--green);background:var(--green-bg)}
+
+  /* syntax colors (light) */
+  .kw{color:#cf222e}.fn{color:#7c3aed}.str{color:#0a7d33}
+  .num{color:#0550ae}.cm{color:#8b949e;font-style:italic}.self{color:#bc4c00}
+  .bn{color:#1b7c83}
+
+  .tray-label{font-family:var(--font-code);font-size:12px;color:var(--muted);
+    margin:18px 0 9px;letter-spacing:.04em;text-transform:uppercase}
+  .tray{display:flex;flex-direction:column;gap:9px}
+
+  /* ---------- FEEDBACK ---------- */
+  .feedback{margin-top:14px;padding:11px 14px;border-radius:9px;font-size:14px;
+    display:none;align-items:flex-start;gap:9px;font-family:var(--font-code)}
+  .feedback.show{display:flex}
+  .feedback.ok{background:var(--green-bg);border:1px solid var(--green);color:#0f7038}
+  .feedback.no{background:var(--red-bg);border:1px solid var(--red);color:#a82424}
+  .feedback .ic{font-weight:700;flex-shrink:0}
+
+  /* ---------- BUTTONS ---------- */
+  .actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+  button{font-family:var(--font-ui);font-size:14px;font-weight:600;cursor:pointer;
+    border-radius:9px;padding:11px 18px;border:1px solid transparent;transition:.15s}
+  .btn-run{background:var(--green);color:#fff;flex:1}
+  .btn-run:disabled{background:var(--bg-2);color:var(--faint);cursor:not-allowed;border-color:var(--line)}
+  .btn-run:not(:disabled):hover{box-shadow:0 8px 20px -8px var(--green);transform:translateY(-1px)}
+  .btn-ghost{background:var(--panel);border-color:var(--line);color:var(--muted)}
+  .btn-ghost:hover{border-color:var(--muted);color:var(--ink)}
+
+  /* ---------- TERMINAL ---------- */
+  .term-body{font-family:var(--font-code);font-size:13.5px;line-height:1.65;
+    background:var(--term-bg);padding:16px;min-height:360px;max-height:580px;overflow-y:auto;
+    color:#c9d3e3;white-space:pre-wrap;word-break:break-word}
+  .term-body::-webkit-scrollbar{width:8px}
+  .term-body::-webkit-scrollbar-thumb{background:#283142;border-radius:8px}
+  .term-line{animation:fadein .25s}
+  @keyframes fadein{from{opacity:0;transform:translateY(3px)}to{opacity:1}}
+  .t-green{color:#4ade80}.t-yellow{color:#fbbf24}.t-red{color:#f87171}
+  .t-blue{color:#60a5fa}.t-muted{color:#7c8aa0}.t-purple{color:#c4a5fd}
+  .t-bold{font-weight:700;color:#fff}
+
+  .term-input-row{display:flex;align-items:center;gap:8px;padding:10px 16px;
+    border-top:1px solid var(--line);background:var(--panel-2)}
+  .term-input-row.hidden{display:none}
+  .term-prompt{font-family:var(--font-code);color:var(--green);font-size:13.5px;font-weight:700}
+  #termInput{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:7px;
+    padding:9px 11px;color:var(--ink);font-family:var(--font-code);font-size:13.5px;outline:none}
+  #termInput:focus{border-color:var(--green)}
+  .term-send{background:var(--green);color:#fff;padding:9px 16px;border-radius:7px}
+
+  .idle-term{color:#5a6577;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;min-height:360px;gap:14px;text-align:center;
+    font-family:var(--font-code);font-size:13px;background:var(--term-bg)}
+  .idle-term .big{font-size:34px;opacity:.4}
+
+  .hint-bar{margin-top:16px;font-size:13px;color:var(--muted);display:flex;
+    align-items:flex-start;gap:8px;font-family:var(--font-code)}
+
+  footer{margin-top:38px;text-align:center;color:var(--faint);font-size:13px;
+    font-family:var(--font-code);border-top:1px solid var(--line);padding-top:22px}
+
+  .win-badge{display:none;padding:18px;text-align:center;
+    background:linear-gradient(135deg,#ecfaf0,#e3f5ea);border-top:1px solid var(--green)}
+  .win-badge.show{display:block;animation:fadein .4s}
+  .win-badge .trophy{font-size:34px}
+  .win-badge h3{color:var(--green);margin:6px 0 4px}
+  .win-badge p{color:var(--muted);font-size:13px}
+
+  .drag-clone{position:fixed;pointer-events:none;z-index:999;opacity:.95;
+    width:auto;max-width:90vw;box-shadow:0 14px 34px rgba(40,60,100,.3)}
+
+  /* ---------- AUTHOR / DONATE FOOTER ---------- */
+  .author-card{
+    margin-top:34px;background:linear-gradient(135deg,#fff7e8,#fdf0e4);
+    border:1px solid #f1ddc4;border-radius:18px;padding:26px 24px;text-align:center;
+    box-shadow:0 10px 30px -20px rgba(180,120,40,.4);
+  }
+  .author-card .kicker{
+    font-family:var(--font-code);font-size:12px;letter-spacing:.22em;
+    text-transform:uppercase;color:#bf7d18;margin-bottom:10px;
+  }
+  .author-card h3{font-size:21px;font-weight:800;color:#3a2c1c;margin-bottom:8px;
+    letter-spacing:-.01em}
+  .author-card p{color:#7a6249;font-size:14.5px;max-width:520px;margin:0 auto 18px}
+  .author-card p b{color:#5a4631}
+  .author-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .btn-author{
+    display:inline-flex;align-items:center;gap:9px;font-family:var(--font-ui);
+    font-size:14.5px;font-weight:600;text-decoration:none;border-radius:11px;
+    padding:12px 20px;transition:.16s;border:1px solid transparent;
+  }
+  .btn-medium{background:#1a1a1a;color:#fff}
+  .btn-medium:hover{transform:translateY(-2px);box-shadow:0 10px 22px -10px rgba(0,0,0,.5)}
+  .btn-coffee{background:#ffdd00;color:#2a2200}
+  .btn-coffee:hover{transform:translateY(-2px);box-shadow:0 10px 22px -10px rgba(200,160,0,.6)}
+  .btn-author svg{flex-shrink:0}
+  .donate-note{margin-top:14px;font-family:var(--font-code);font-size:12px;color:#a98a5e}
+
+  footer.credit{margin-top:26px;text-align:center;color:var(--faint);font-size:13px;
+    font-family:var(--font-code);border-top:1px solid var(--line);padding-top:20px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ===== GAME TITLE BANNER (Cat Factory style) ===== -->
+  <div class="banner">
+    <div class="eyebrow">OOP Simulation · Python</div>
+    <h1>Puzzle <span class="flame">Master</span></h1>
+    <p class="tagline">One mold, many players. Feel the difference between a <b>class</b> and an <b>object</b> without memorizing theory — just build it, then play.</p>
+    <div class="chips">
+      <span class="chip">1 · <b>Build the mold</b></span>
+      <span class="chip">2 · <b>Bring objects to life</b></span>
+      <span class="chip">3 · <b>Play the game</b></span>
+    </div>
+  </div>
+
+  <p class="intro">Learning OOP does not have to be confusing. Drag the code blocks into the right order, one step at a time. As long as you follow the <b>rules</b>, the code runs — and your very own puzzle game comes alive in the terminal next to it.</p>
+
+  <div class="progress" id="progress"></div>
+  <div class="plabel" id="plabel">Step 1 of 5</div>
+
+  <div class="stage">
+
+    <!-- LEFT: BUILDER -->
+    <div class="card">
+      <div class="card-head">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <span class="card-title">builder.py — drag blocks into place</span>
+      </div>
+      <div class="card-body">
+
+        <div class="mission" id="mission">
+          <div class="tag" id="mTag">Step 1</div>
+          <h3 id="mTitle"></h3>
+          <p id="mDesc"></p>
+        </div>
+
+        <div class="slots" id="slots"></div>
+
+        <div class="tray-label">Available blocks — drag them up</div>
+        <div class="tray" id="tray"></div>
+
+        <div class="feedback" id="feedback">
+          <span class="ic" id="fbIc"></span><span id="fbText"></span>
+        </div>
+
+        <div class="actions">
+          <button class="btn-run" id="checkBtn" disabled>Check &amp; Continue →</button>
+          <button class="btn-ghost" id="resetBtn">Shuffle</button>
+        </div>
+
+        <div class="hint-bar">
+          <span>💡</span><span id="hintText"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: TERMINAL -->
+    <div class="card">
+      <div class="card-head">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <span class="card-title">terminal — python game.py</span>
+      </div>
+      <div id="termIdle" class="idle-term">
+        <div class="big">▷</div>
+        <div>Build the code on the left first.<br>The game will run here once every step is correct.</div>
+      </div>
+      <div class="term-body" id="term" style="display:none"></div>
+      <div class="term-input-row hidden" id="termInputRow">
+        <span class="term-prompt">›</span>
+        <input id="termInput" type="text" placeholder="type your answer then press Enter..." autocomplete="off">
+        <button class="term-send" id="termSend">Send</button>
+      </div>
+      <div class="win-badge" id="winBadge">
+        <div class="trophy">🏆</div>
+        <h3>You did it!</h3>
+        <p>You just built and played your very first OOP program.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== AUTHOR + DONATE ===== -->
+  <div class="author-card">
+    <div class="kicker">Enjoy learning this way?</div>
+    <h3>Follow A. Rahman for more stories &amp; tutorials</h3>
+    <p>This interactive game is free, built to help beginners understand Python in a fun way. If it helped you, visit my Medium — or buy me a coffee to support the next tutorial. <b>Thank you!</b> ❤️</p>
+    <div class="author-actions">
+      <a class="btn-author btn-medium" href="https://medium.com/@rahman.poland.ce21" target="_blank" rel="noopener">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M13.54 12a6.8 6.8 0 0 1-6.77 6.82A6.8 6.8 0 0 1 0 12a6.8 6.8 0 0 1 6.77-6.82A6.8 6.8 0 0 1 13.54 12zm7.42 0c0 3.54-1.51 6.42-3.38 6.42-1.87 0-3.39-2.88-3.39-6.42s1.52-6.42 3.39-6.42S20.96 8.46 20.96 12zM24 12c0 3.17-.53 5.75-1.19 5.75-.66 0-1.19-2.58-1.19-5.75s.53-5.75 1.19-5.75C23.47 6.25 24 8.83 24 12z"/>
+        </svg>
+        Follow on Medium
+      </a>
+      <a class="btn-author btn-coffee" href="https://www.buymeacoffee.com/USERNAME" target="_blank" rel="noopener">
+        <span style="font-size:18px">☕</span>
+        Buy me a coffee
+      </a>
+    </div>
+    <div class="donate-note">100% free to learn · support is entirely optional</div>
+  </div>
+
+  <footer class="credit">
+    Puzzle Master · built for beginners falling in love with Python ❤️<br>
+    Concepts: class · object · del · multiple objects · pass
+  </footer>
+</div>
+
+<script>
+/* ============================================================
+   DATA: each step has `lines` (canonical order) AND `group`.
+   Lines with the SAME group number can be swapped freely.
+   Validation: the group pattern of the arrangement == canonical pattern.
+============================================================ */
+const STEPS = [
+  {
+    tag:"Step 1 — Class",
+    title:"Design the character mold",
+    desc:"A class is a mold/blueprint. Assemble the definition of the <code>Player</code> class along with its properties: name, score, and health.",
+    lines:[
+      `<span class="kw">class</span> Player:`,
+      `    <span class="kw">def</span> <span class="fn">__init__</span>(<span class="self">self</span>, name):`,
+      `        <span class="self">self</span>.name = name`,
+      `        <span class="self">self</span>.score = <span class="num">0</span>`,
+      `        <span class="self">self</span>.health = <span class="num">3</span>`,
+    ],
+    group:[0,1,2,2,2],   // class -> def -> 3 equivalent properties
+    hint:"class on the top line, then def __init__, then the properties. The order among properties is free."
+  },
+  {
+    tag:"Step 2 — Object",
+    title:"Bring one character to life",
+    desc:"A mold is useless until you use it. Create an <code>object</code> named <code>p1</code> from the Player mold, then print its contents.",
+    lines:[
+      `p1 = Player(<span class="str">"Rangga"</span>)`,
+      `<span class="fn">print</span>(p1.name)`,
+      `<span class="fn">print</span>(p1.health)`,
+    ],
+    group:[0,1,1],       // create the object first, then 2 equivalent prints
+    hint:"Create the object first, only then can you print its contents. The order of the two prints is free."
+  },
+  {
+    tag:"Step 3 — Multiple Objects",
+    title:"One mold, many players",
+    desc:"The power of OOP: from one mold you can create many independent objects. Create <code>p2</code> and <code>p3</code>, then gather them all into one list.",
+    lines:[
+      `p2 = Player(<span class="str">"Sari"</span>)`,
+      `p3 = Player(<span class="str">"Budi"</span>)`,
+      `players = [p1, p2, p3]`,
+    ],
+    group:[0,0,1],       // two equivalent objects, list created last
+    hint:"Create each player first (their order is free), then gather them into the list."
+  },
+  {
+    tag:"Step 4 — Pass",
+    title:"Leave a 'Coming Soon' slot",
+    desc:"Not sure what to put inside yet? Python won't allow an empty class. Use <code>pass</code> so it doesn't error — the <code>Enemy</code> class is yours to grow later.",
+    lines:[
+      `<span class="kw">class</span> Enemy:`,
+      `    <span class="kw">pass</span>`,
+    ],
+    group:[0,1],
+    hint:"The class name on top, then pass indented inside it."
+  },
+  {
+    tag:"Step 5 — Del",
+    title:"Clean up after you're done",
+    desc:"The game is over, clear the data from memory with the <code>del</code> keyword. Print a farewell message, then delete the list of players.",
+    lines:[
+      `<span class="fn">print</span>(<span class="str">"Game over. See you next time!"</span>)`,
+      `<span class="kw">del</span> players`,
+    ],
+    group:[0,1],
+    hint:"Print the message first while the data still exists, then delete it with del."
+  },
+];
+
+/* ---------- STATE ---------- */
+let current = 0;
+let slotState = [];
+
+const $ = s => document.querySelector(s);
+const slotsEl = $("#slots"), trayEl = $("#tray");
+
+/* ---------- PROGRESS ---------- */
+function renderProgress(){
+  const p = $("#progress"); p.innerHTML="";
+  STEPS.forEach((_,i)=>{
+    const d=document.createElement("div");
+    d.className="pstep"+(i<current?" done":i===current?" active":"");
+    p.appendChild(d);
+  });
+  $("#plabel").textContent=`Step ${current+1} of ${STEPS.length} — ${STEPS[current].title}`;
+}
+
+/* ---------- SHUFFLE ---------- */
+function shuffle(n){
+  const r=Array.from({length:n},(_,i)=>i);
+  for(let i=r.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[r[i],r[j]]=[r[j],r[i]];}
+  if(r.every((v,i)=>v===i) && r.length>1)[r[0],r[1]]=[r[1],r[0]];
+  return r;
+}
+
+/* ---------- RENDER STEP ---------- */
+function renderStep(){
+  const step=STEPS[current];
+  $("#mTag").textContent=step.tag;
+  $("#mTitle").textContent=step.title;
+  $("#mDesc").innerHTML=step.desc;
+  $("#hintText").textContent=step.hint;
+  $("#feedback").className="feedback";
+  $("#checkBtn").disabled=true;
+  $("#checkBtn").textContent = current===STEPS.length-1 ? "Check & Run ▶" : "Check & Continue →";
+
+  slotState=Array(step.lines.length).fill(null);
+  slotsEl.innerHTML="";
+  step.lines.forEach((_,i)=>{
+    const s=document.createElement("div");
+    s.className="slot";s.dataset.slot=i;
+    s.innerHTML=`<span class="slot-num">${i+1}</span>`;
+    slotsEl.appendChild(s);
+  });
+
+  trayEl.innerHTML="";
+  shuffle(step.lines.length).forEach(idx=>{
+    const b=document.createElement("div");
+    b.className="block";b.draggable=true;b.dataset.block=idx;
+    b.innerHTML=`<span class="grip">⠿</span>${step.lines[idx]}`;
+    trayEl.appendChild(b);
+  });
+  attachDnD();
+  renderProgress();
+}
+
+/* ---------- ENABLE CHECK ---------- */
+function maybeEnable(){
+  $("#checkBtn").disabled = !slotState.every(v=>v!==null);
+}
+
+/* ============================================================
+   FLEXIBLE VALIDATION
+   Valid if each slot holds a block whose GROUP matches the canonical pattern.
+   Blocks with the same group are rule-equivalent, so they can be swapped.
+============================================================ */
+function isArrangementValid(){
+  const g = STEPS[current].group;
+  const placed = slotState.map(blockIdx => g[blockIdx]);
+  for(let i=0;i<g.length;i++) if(placed[i]!==g[i]) return false;
+  return true;
+}
+
+/* ---------- DRAG & DROP ---------- */
+let dragEl=null, clone=null;
+
+function attachDnD(){
+  document.querySelectorAll(".block").forEach(b=>{
+    b.addEventListener("dragstart",e=>{
+      if(b.classList.contains("locked"))return;
+      dragEl=b;b.classList.add("dragging");
+      e.dataTransfer.setData("text",b.dataset.block);
+    });
+    b.addEventListener("dragend",()=>{dragEl&&dragEl.classList.remove("dragging");dragEl=null;});
+    b.addEventListener("touchstart",touchStart,{passive:false});
+  });
+  [...document.querySelectorAll(".slot"),trayEl].forEach(t=>{
+    t.addEventListener("dragover",e=>{e.preventDefault();if(t.classList.contains("slot"))t.classList.add("over");});
+    t.addEventListener("dragleave",()=>t.classList&&t.classList.remove("over"));
+    t.addEventListener("drop",e=>{
+      e.preventDefault();
+      t.classList.remove&&t.classList.remove("over");
+      if(!dragEl)return;
+      placeBlock(dragEl,t);
+    });
+  });
+}
+
+function placeBlock(block,target){
+  const fromSlot=block.parentElement.classList.contains("slot")?block.parentElement:null;
+  if(target.classList.contains("slot")){
+    const occupant=target.querySelector(".block");
+    if(occupant && occupant!==block){trayEl.appendChild(occupant);occupant.style.width="100%";}
+    target.appendChild(block);target.classList.add("filled");block.style.width="100%";
+  }else{
+    trayEl.appendChild(block);block.style.width="100%";
+  }
+  if(fromSlot)fromSlot.classList.remove("filled");
+  syncSlotState();
+}
+
+function syncSlotState(){
+  slotState=slotState.map(()=>null);
+  document.querySelectorAll(".slot").forEach(s=>{
+    const b=s.querySelector(".block");
+    slotState[+s.dataset.slot]=b?+b.dataset.block:null;
+    if(!b){
+      s.classList.remove("filled");
+      if(!s.querySelector(".slot-num"))s.innerHTML=`<span class="slot-num">${+s.dataset.slot+1}</span>`;
+    }else if(!s.querySelector(".slot-num")){
+      const n=document.createElement("span");n.className="slot-num";
+      n.textContent=+s.dataset.slot+1;s.prepend(n);
+    }
+  });
+  $("#feedback").className="feedback";
+  maybeEnable();
+}
+
+/* ---- TOUCH ---- */
+function touchStart(e){
+  const b=e.currentTarget;
+  if(b.classList.contains("locked"))return;
+  e.preventDefault();dragEl=b;
+  const r=b.getBoundingClientRect();
+  clone=b.cloneNode(true);clone.classList.add("drag-clone");clone.style.width=r.width+"px";
+  document.body.appendChild(clone);
+  const t=e.touches[0];moveClone(t.clientX,t.clientY);
+  document.addEventListener("touchmove",touchMove,{passive:false});
+  document.addEventListener("touchend",touchEnd);
+}
+function moveClone(x,y){clone.style.left=(x-30)+"px";clone.style.top=(y-20)+"px";}
+function touchMove(e){
+  e.preventDefault();const t=e.touches[0];moveClone(t.clientX,t.clientY);
+  document.querySelectorAll(".slot").forEach(s=>s.classList.remove("over"));
+  const el=document.elementFromPoint(t.clientX,t.clientY);
+  const slot=el&&el.closest&&el.closest(".slot");
+  if(slot)slot.classList.add("over");
+}
+function touchEnd(e){
+  const t=e.changedTouches[0];
+  const el=document.elementFromPoint(t.clientX,t.clientY);
+  const slot=el&&el.closest&&el.closest(".slot");
+  const tray=el&&el.closest&&el.closest("#tray");
+  if(slot)placeBlock(dragEl,slot);
+  else if(tray)placeBlock(dragEl,trayEl);
+  document.querySelectorAll(".slot").forEach(s=>s.classList.remove("over"));
+  if(clone){clone.remove();clone=null;}
+  dragEl=null;
+  document.removeEventListener("touchmove",touchMove);
+  document.removeEventListener("touchend",touchEnd);
+}
+
+/* ---------- CHECK ---------- */
+$("#checkBtn").addEventListener("click",()=>{
+  const fb=$("#feedback");
+  if(isArrangementValid()){
+    fb.className="feedback show ok";
+    $("#fbIc").textContent="✓";
+    $("#fbText").textContent="Exactly! You followed the rules. This code is ready to run.";
+    document.querySelectorAll(".slot .block").forEach(b=>{b.classList.add("correct","locked");b.draggable=false;});
+    $("#checkBtn").disabled=true;
+    setTimeout(()=>{ current<STEPS.length-1 ? (current++,renderStep()) : runGame(); },850);
+  }else{
+    fb.className="feedback show no";
+    $("#fbIc").textContent="✕";
+    $("#fbText").textContent="Not quite. Watch the structural rule: which one must be defined first?";
+    slotsEl.animate([{transform:"translateX(0)"},{transform:"translateX(-6px)"},
+      {transform:"translateX(6px)"},{transform:"translateX(0)"}],{duration:260});
+  }
+});
+$("#resetBtn").addEventListener("click",renderStep);
+
+/* ============================================================
+   GAME ENGINE (port JS dari game Python)
+============================================================ */
+const PUZZLES=[
+  {q:"I have cities but no houses, mountains but no trees, water but no fish. What am I?",a:"map",lvl:1},
+  {q:"The more you take, the bigger I get. What am I?",a:"hole",lvl:2},
+  {q:"What is always in front of you but cannot be seen?",a:"future",lvl:3},
+];
+const PLAYERS=[
+  {name:"Rangga",score:0,health:3,correct:0},
+  {name:"Sari",score:0,health:3,correct:0},
+  {name:"Budi",score:0,health:3,correct:0},
+];
+const term=$("#term"), inputRow=$("#termInputRow"), input=$("#termInput");
+let pIdx=0,qIdx=0,awaiting=false;
+
+function tprint(html="",cls=""){
+  const line=document.createElement("div");
+  line.className="term-line"+(cls?" "+cls:"");
+  line.innerHTML=html||"&nbsp;";
+  term.appendChild(line);term.scrollTop=term.scrollHeight;
+}
+function rule(c="="){tprint(c.repeat(46),"t-muted");}
+
+function runGame(){
+  $("#termIdle").style.display="none";
+  term.style.display="block";term.innerHTML="";
+  $("#progress").querySelectorAll(".pstep").forEach(p=>{p.classList.remove("active");p.classList.add("done");});
+  $("#plabel").textContent="All steps complete — game running! ▶";
+  tprint("$ python game.py","t-green");tprint();
+  rule();
+  tprint("     WELCOME TO PUZZLE MASTER","t-bold");
+  tprint("        (Learn OOP while playing!)","t-muted");
+  rule();tprint();
+  tprint('Three player objects created from one <span class="t-purple">Player</span> mold:',"t-muted");
+  tprint("→ Rangga, Sari, Budi","t-blue");tprint();
+  pIdx=0;qIdx=0;PLAYERS.forEach(p=>{p.score=0;p.health=3;p.correct=0;});
+  startPlayer();
+}
+function startPlayer(){
+  if(pIdx>=PLAYERS.length)return showBoard();
+  const p=PLAYERS[pIdx];
+  tprint();rule();
+  tprint(`  Now playing: <span class="t-bold">${p.name}</span>`);
+  rule();qIdx=0;askQuestion();
+}
+function hearts(n){return n>0?"♥ ".repeat(n):"(empty)";}
+function askQuestion(){
+  const p=PLAYERS[pIdx];
+  if(qIdx>=PUZZLES.length || p.health<=0){
+    if(p.health<=0){tprint();tprint(`  Oh no, ${p.name} is out of lives! Game over.`,"t-red");}
+    return finishPlayer();
+  }
+  const pz=PUZZLES[qIdx];
+  tprint();tprint(`--- LEVEL ${pz.lvl} ---`,"t-yellow");
+  tprint(`Lives: ${hearts(p.health)}| Score: ${p.score}`,"t-muted");
+  tprint();tprint(`Riddle: ${pz.q}`);
+  inputRow.classList.remove("hidden");input.focus();awaiting=true;
+}
+function submitAnswer(){
+  if(!awaiting)return;
+  const p=PLAYERS[pIdx],pz=PUZZLES[qIdx];
+  const val=input.value.trim().toLowerCase();
+  if(val==="")return;
+  tprint(`› ${input.value}`,"t-green");input.value="";
+  if(val===pz.a){
+    const poin=pz.lvl*10;p.score+=poin;p.correct++;
+    tprint(`  Correct! +${poin} points (Level ${pz.lvl}). Score: ${p.score}`,"t-green");
+  }else{
+    p.health--;
+    tprint(`  Wrong! The correct answer: '${pz.a}'`,"t-red");
+    tprint(`  Life lost. Remaining: ${hearts(p.health)}`,"t-muted");
+  }
+  qIdx++;awaiting=false;setTimeout(askQuestion,250);
+}
+function finishPlayer(){
+  const p=PLAYERS[pIdx];const bonus=p.health*5;
+  if(bonus>0){p.score+=bonus;tprint();tprint(`  Lives bonus: ${p.health} x 5 = +${bonus} points`,"t-yellow");}
+  tprint();rule("-");
+  tprint(`  Done, ${p.name}! Correct ${p.correct}/${PUZZLES.length} · SCORE: ${p.score}`,"t-bold");
+  rule("-");inputRow.classList.add("hidden");pIdx++;setTimeout(startPlayer,400);
+}
+function showBoard(){
+  tprint();rule();
+  tprint("            FINAL SCOREBOARD","t-bold");rule();
+  const sorted=[...PLAYERS].sort((a,b)=> b.score-a.score || b.correct-a.correct);
+  sorted.forEach((p,i)=>tprint(`  ${i+1}. ${p.name.padEnd(10)} Score: ${String(p.score).padEnd(4)} (${p.correct} correct)`,i===0?"t-yellow":""));
+  rule();tprint();
+  const top=sorted[0];
+  if(top.score===0){tprint("  No champion yet! Nobody managed to score.","t-red");}
+  else{
+    const tie=sorted.filter(p=>p.score===top.score);
+    if(tie.length>1)tprint(`  IT'S A TIE! Joint champions (${top.score}): ${tie.map(p=>p.name).join(", ")}!`,"t-yellow");
+    else tprint(`  🏆 THE CHAMPION: ${top.name} with ${top.score} points! Congrats!`,"t-yellow");
+  }
+  tprint();
+  tprint('  <span class="t-muted"># Game over, clean up memory:</span>');
+  PLAYERS.forEach(p=>tprint(`  Clearing data: ${p.name} ...`,"t-muted"));
+  tprint(`  <span class="t-purple">del</span> players  →  data deleted.`,"t-muted");
+  tprint();tprint("$ _","t-green");
+  $("#winBadge").classList.add("show");
+}
+input.addEventListener("keydown",e=>{if(e.key==="Enter")submitAnswer();});
+$("#termSend").addEventListener("click",submitAnswer);
+
+/* ---------- INIT ---------- */
+renderStep();
+
+/* ============================================================
+   PROTEKSI RINGAN (penghalang untuk pengguna biasa)
+   Catatan: tidak bisa 100% mencegah orang teknis, karena
+   browser tetap perlu kode untuk berjalan. Ini hanya lapisan
+   penghalang terhadap klik-kanan, shortcut DevTools, dan copy.
+============================================================ */
+(function(){
+  // 1) Blokir menu klik kanan
+  document.addEventListener("contextmenu", e => e.preventDefault());
+
+  // 2) Blokir shortcut keyboard untuk DevTools & view-source & copy/cut/paste/save
+  document.addEventListener("keydown", function(e){
+    const k = (e.key || "").toLowerCase();
+
+    // F12
+    if(e.key === "F12"){ e.preventDefault(); return false; }
+
+    // Ctrl/Cmd + Shift + I / J / C  (DevTools, console, inspector)
+    if((e.ctrlKey || e.metaKey) && e.shiftKey && ["i","j","c"].includes(k)){
+      e.preventDefault(); return false;
+    }
+
+    // Ctrl/Cmd + U (view source)
+    if((e.ctrlKey || e.metaKey) && k === "u"){ e.preventDefault(); return false; }
+
+    // Ctrl/Cmd + S (save page)
+    if((e.ctrlKey || e.metaKey) && k === "s"){ e.preventDefault(); return false; }
+
+    // Ctrl/Cmd + C / X / A  — KECUALI saat fokus di input jawaban
+    const inField = document.activeElement && document.activeElement.id === "termInput";
+    if((e.ctrlKey || e.metaKey) && ["c","x","a"].includes(k) && !inField){
+      e.preventDefault(); return false;
+    }
+  });
+
+  // 3) Blokir event copy/cut — kecuali di input jawaban
+  ["copy","cut"].forEach(evt=>{
+    document.addEventListener(evt, function(e){
+      if(!(document.activeElement && document.activeElement.id === "termInput")){
+        e.preventDefault();
+      }
+    });
+  });
+
+  // 4) Blokir drag gambar/teks
+  document.addEventListener("dragstart", function(e){
+    // izinkan drag balok kode (punya class .block), blokir lainnya
+    if(!(e.target.closest && e.target.closest(".block"))) e.preventDefault();
+  });
+})();
+</script>
+</body>
+</html>
